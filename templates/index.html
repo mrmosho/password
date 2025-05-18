@@ -1,0 +1,174 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Strength Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Password Strength Analyzer</h1>
+        <p>This tool evaluates password security based on entropy (a measure of randomness and unpredictability) using combinatorial and probability principles.</p>
+        
+        <div class="tabs">
+            <button class="tab-button active" data-tab="analyzer">Analyzer</button>
+            <button class="tab-button" data-tab="generator">Generator</button>
+            <button class="tab-button" data-tab="simulator">Attack Simulator</button>
+        </div>
+        
+        <div class="tab-content" id="analyzer-tab">
+            <div class="input-group">
+                <label for="password">Enter Password: 
+                    <button class="toggle-visibility" id="toggleVisibility">Show</button>
+                </label>
+                <input type="password" id="password" placeholder="Enter your password to analyze">
+            </div>
+            
+            <div class="result" id="result">
+                <h2>Analysis Results</h2>
+                
+                <div class="strength-meter">
+                    <div class="strength-meter-fill" id="strengthMeter"></div>
+                </div>
+                <div class="strength-label" id="strengthLabel">Moderate</div>
+                
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-title">Password Length</div>
+                        <div class="metric-value" id="lengthValue">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Character Set Size</div>
+                        <div class="metric-value" id="charsetValue">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Password Space</div>
+                        <div class="metric-value" id="spaceValue">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-title">Entropy (bits)</div>
+                        <div class="metric-value" id="entropyValue">0</div>
+                    </div>
+                </div>
+                
+                <div class="crack-time" id="crackTime">
+                    Estimated time to crack: <strong>Unknown</strong>
+                </div>
+                
+                <div class="formula">
+                    <strong>Formulas used:</strong><br>
+                    Password Space (S) = C^L<br>
+                    Entropy (H) = L × log₂(C)<br>
+                    Time to Crack (T) = S / R<br>
+                    <small>Where C = character set size, L = password length, R = attempts per second</small>
+                </div>
+                
+                <div class="patterns-section" id="patternsSection" style="display: none;">
+                    <strong>Detected Patterns:</strong>
+                    <ul id="patternsList"></ul>
+                </div>
+                
+                <div class="recommendations" id="recommendations">
+                    <strong>Recommendations:</strong>
+                    <ul id="recommendationsList"></ul>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="generator-tab" style="display: none;">
+            <h2>Password Generator</h2>
+            <p>Generate a strong password that meets your requirements.</p>
+            
+            <div class="generator-options">
+                <div class="option">
+                    <label for="passwordLength">Password Length:</label>
+                    <div class="range-container">
+                        <input type="range" id="passwordLength" min="8" max="32" value="16">
+                        <span id="lengthValue">16</span>
+                    </div>
+                </div>
+                
+                <div class="option">
+                    <input type="checkbox" id="includeLowercase" checked>
+                    <label for="includeLowercase">Include Lowercase (a-z)</label>
+                </div>
+                
+                <div class="option">
+                    <input type="checkbox" id="includeUppercase" checked>
+                    <label for="includeUppercase">Include Uppercase (A-Z)</label>
+                </div>
+                
+                <div class="option">
+                    <input type="checkbox" id="includeNumbers" checked>
+                    <label for="includeNumbers">Include Numbers (0-9)</label>
+                </div>
+                
+                <div class="option">
+                    <input type="checkbox" id="includeSpecial" checked>
+                    <label for="includeSpecial">Include Special Characters (!@#$%^&*)</label>
+                </div>
+            </div>
+            
+            <button id="generatePassword">Generate Password</button>
+            
+            <div class="generated-password-container" id="generatedPasswordContainer" style="display: none;">
+                <div class="generated-password-header">
+                    <h3>Generated Password:</h3>
+                    <button id="regeneratePassword" title="Generate a new password">↻</button>
+                    <button id="copyPassword" title="Copy to clipboard">📋</button>
+                </div>
+                <div class="generated-password" id="generatedPassword"></div>
+                
+                <div class="strength-meter">
+                    <div class="strength-meter-fill" id="generatedStrengthMeter"></div>
+                </div>
+                <div class="strength-label" id="generatedStrengthLabel"></div>
+                
+                <div class="generated-metrics">
+                    <div class="metric-item">
+                        <span class="metric-name">Entropy:</span>
+                        <span class="metric-value" id="generatedEntropyValue"></span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-name">Crack Time:</span>
+                        <span class="metric-value" id="generatedCrackTime"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="tab-content" id="simulator-tab" style="display: none;">
+            <h2>Brute Force Attack Simulator</h2>
+            <p>See how changes to your password affect the time required to crack it.</p>
+            
+            <div class="input-group">
+                <label for="simulatorPassword">Enter Base Password:</label>
+                <input type="text" id="simulatorPassword" placeholder="Enter a password to simulate">
+            </div>
+            
+            <button id="simulateAttack">Simulate Attack</button>
+            
+            <div class="simulation-results" id="simulationResults" style="display: none;">
+                <h3>Simulation Results</h3>
+                <div class="results-container" id="resultsContainer"></div>
+                
+                <div class="chart-container">
+                    <canvas id="simulationChart"></canvas>
+                </div>
+                
+                <div class="simulation-explanation">
+                    <h4>Understanding the Results</h4>
+                    <p>This simulation shows how different modifications to your password affect its resistance to brute force attacks. The calculation assumes an attacker can try 1 billion passwords per second, which represents a high-end password cracking system.</p>
+                    <p>Adding complexity (by using different character types) or increasing length can dramatically increase the time needed to crack a password.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
